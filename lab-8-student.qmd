@@ -66,7 +66,7 @@ each variable, with the datatype of that variable immediately below it's name.
 # Creating a tibble
 # https://chatgpt.com/share/67358448-b774-8006-9225-88b5a3204ecf
 
-types <- map_chr(surveys, typeof)
+types <- map_chr(.x = surveys, .f = typeof)
 tibble(variable = names(surveys), data_type = types) |>
   pivot_wider(names_from = variable, values_from = data_type)
 
@@ -92,7 +92,7 @@ list output back into a data frame.
 
 # Note: no gender column, it's "sex"
 
-map_at(evals, c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), as.factor) |>
+evals |> map_at(c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), .f = as.factor) |>
   bind_cols()
 
 
