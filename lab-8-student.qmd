@@ -1,15 +1,29 @@
 ---
 title: "Lab 8: Searching for Efficiency"
-author: "Your name here!"
-format: html
+author: "Yanna Shirokova"
+format: 
+  html:
+    code-fold: true
+    code-tools: true
+    theme: cosmo
+    toc: true
 editor: source
 embed-resources: true
+execute:
+  echo: true
+  error: false
+  message: false
 ---
+
 
 ```{r}
 #| label: pacakges
+#| message: false
+#| warning: false
 
 library(tidyverse)
+library(purrr)
+library(kableExtra)
 ```
 
 For this week's lab, we will be revisiting questions from previous lab
@@ -20,6 +34,8 @@ folder, so all you need to do is read them in. 🙃
 
 ```{r}
 #| label: read-in-old-data
+#| message: false
+#| warning: false
 
 # Data from Lab 2
 surveys <- read_csv(here::here("data", "surveys.csv"))
@@ -43,7 +59,16 @@ each variable, with the datatype of that variable immediately below it's name.
 
 ```{r}
 #| label: map-data-types-of-surveys
+#| message: false
+#| warning: false
+#| echo: true
 
+# Creating a tibble
+# https://chatgpt.com/share/67358448-b774-8006-9225-88b5a3204ecf
+
+types <- map_chr(surveys, typeof)
+tibble(variable = names(surveys), data_type = types) |>
+  pivot_wider(names_from = variable, values_from = data_type)
 
 ```
 
@@ -61,6 +86,14 @@ list output back into a data frame.
 
 ```{r}
 #| label: map-to-mutate-columns
+#| message: false
+#| warning: false
+#| echo: true
+
+# Note: no gender column, it's "sex"
+
+map_at(evals, c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), as.factor) |>
+  bind_cols()
 
 
 ```
@@ -87,6 +120,41 @@ I'm using the `sen_level` classification from Challenge 3
 
 ```{r}
 #| label: double-pivot-for-summary-table
+#| message: false
+#| warning: false
+#| echo: true
+
+# https://chatgpt.com/share/673598fd-8a50-8006-aa7d-27ea10de6d8c
+# for more on kableExtra
+
+evals |>
+  select(teacher_id, academic_degree, seniority, sex) |>
+  distinct(teacher_id, .keep_all = TRUE) |>
+  mutate(
+    status = case_when(
+      seniority <= 4 ~ "junior",
+      seniority > 4 ~ "senior")) |>
+  pivot_longer(cols = c(sex, academic_degree, status),  
+               names_to = "demographic", 
+               values_to = "category") |>
+  mutate(category = case_when(
+    category == "female" ~ "Female",
+    category == "male" ~ "Male",
+    category == "no_dgr" ~ "No Degree",
+    category == "ma" ~ "Masters",
+    category == "dr" ~ "Doctorate",
+    category == "prof" ~ "Professor",
+    category == "junior" ~ "Junior (4 years or less)",
+    category == "senior" ~ "Senior (more than 4 years)"),
+    category = factor(category, 
+      levels = c("Female", "Male", "Junior (4 years or less)", "Senior (more than 4 years)", 
+                               "No Degree", "Masters", "Doctorate", "Professor"))) |>
+  count(category) |>
+  pivot_wider(names_from = category, values_from = n) |>
+  summarise(across(everything(), sum)) |>
+  kable() |>
+  kable_styling() |>
+  row_spec(1, background = "lightgray")
 
 
 ```
@@ -110,6 +178,10 @@ Question 1 asked you to use `across()` to make a table which summarized:
 
 ```{r}
 #| label: map-missing-values-of-fish
+#| message: false
+#| warning: false
+#| echo: true
 
-
+fish |> 
+  map_int(.f = ~ sum(is.na(.)))
 ```
