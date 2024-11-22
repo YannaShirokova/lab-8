@@ -66,9 +66,17 @@ each variable, with the datatype of that variable immediately below it's name.
 # Creating a tibble
 # https://chatgpt.com/share/67358448-b774-8006-9225-88b5a3204ecf
 
-types <- map_chr(.x = surveys, .f = typeof)
+# Success Comment: Is this the "best" or most modern syntax for map()? 
+# The syntax for map() should look **identical** to across().
+# Fixed!
+
+types <- surveys |> 
+  map_chr(~ typeof(.)) 
+
 tibble(variable = names(surveys), data_type = types) |>
-  pivot_wider(names_from = variable, values_from = data_type)
+  pivot_wider(names_from = variable, values_from = data_type) |>
+  kable(caption = "Data Type for each Column in Surveys Data") |>
+  kable_styling(bootstrap_options = "striped") 
 
 ```
 
@@ -92,8 +100,15 @@ list output back into a data frame.
 
 # Note: no gender column, it's "sex"
 
-evals |> map_at(c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), .f = as.factor) |>
-  bind_cols()
+# Success Comment: Is this the "best" or most modern syntax for map()? 
+# The syntax for map() should look **identical** to across().
+# Fixed!
+
+evals |> 
+  map_at(c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), ~ as.factor(.)) |>
+  bind_cols() |>
+  kable(caption = "Converting teacher_id, weekday, academic_degree, seniority, and gender to factors") |>
+  kable_styling(bootstrap_options = "striped")
 
 
 ```
@@ -127,6 +142,10 @@ I'm using the `sen_level` classification from Challenge 3
 # https://chatgpt.com/share/673598fd-8a50-8006-aa7d-27ea10de6d8c
 # for more on kableExtra
 
+# Comment: Fun fact! The select() column can be used to rename and 
+# change the order of columns, all in **one** function!
+# Fixed!
+
 evals |>
   select(teacher_id, academic_degree, seniority, sex) |>
   distinct(teacher_id, .keep_all = TRUE) |>
@@ -134,27 +153,23 @@ evals |>
     status = case_when(
       seniority <= 4 ~ "junior",
       seniority > 4 ~ "senior")) |>
-  pivot_longer(cols = c(sex, academic_degree, status),  
-               names_to = "demographic", 
-               values_to = "category") |>
-  mutate(category = case_when(
-    category == "female" ~ "Female",
-    category == "male" ~ "Male",
-    category == "no_dgr" ~ "No Degree",
-    category == "ma" ~ "Masters",
-    category == "dr" ~ "Doctorate",
-    category == "prof" ~ "Professor",
-    category == "junior" ~ "Junior (4 years or less)",
-    category == "senior" ~ "Senior (more than 4 years)"),
-    category = factor(category, 
-      levels = c("Female", "Male", "Junior (4 years or less)", "Senior (more than 4 years)", 
-                               "No Degree", "Masters", "Doctorate", "Professor"))) |>
+  pivot_longer(
+    cols = c(sex, academic_degree, status),
+    names_to = "demographic",
+    values_to = "category") |>
   count(category) |>
   pivot_wider(names_from = category, values_from = n) |>
-  summarise(across(everything(), sum)) |>
+  select(
+    "Female" = female,
+    "Male" = male,
+    "Junior (4 years or less)" = junior,
+    "Senior (more than 4 years)" = senior,
+    "No Degree" = no_dgr,
+    "Masters" = ma,
+    "Doctorate" = dr,
+    "Professor" = prof) |>
   kable() |>
-  kable_styling() |>
-  row_spec(1, background = "lightgray")
+  kable_styling(bootstrap_options = "striped")
 
 
 ```
@@ -182,6 +197,13 @@ Question 1 asked you to use `across()` to make a table which summarized:
 #| warning: false
 #| echo: true
 
+# Success Comment: Could you make this table prettier? :)
+# Fixed!
+
 fish |> 
-  map_int(.f = ~ sum(is.na(.)))
+  map_int(~ sum(is.na(.))) |> 
+  enframe(name = "Variable", value = "Count") |>
+  kable(caption = "Number of NAs in each Variable") |>
+  kable_styling(bootstrap_options = "striped")
+
 ```
