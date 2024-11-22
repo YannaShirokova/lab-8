@@ -70,6 +70,7 @@ each variable, with the datatype of that variable immediately below it's name.
 # The syntax for map() should look **identical** to across().
 # Fixed!
 
+
 types <- surveys |> 
   map_chr(~ typeof(.)) 
 
@@ -104,12 +105,19 @@ list output back into a data frame.
 # The syntax for map() should look **identical** to across().
 # Fixed!
 
-evals |> 
-  map_at(c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), ~ as.factor(.)) |>
-  bind_cols() |>
-  kable(caption = "Converting teacher_id, weekday, academic_degree, seniority, and gender to factors") |>
-  kable_styling(bootstrap_options = "striped")
+# I also changed it so I output a table to show they are factors now
 
+modified_evals <- evals |> 
+  map_at(c("teacher_id", "weekday", "academic_degree", "seniority", "sex"), ~ as.factor(.)) |>
+  bind_cols() 
+
+types <- modified_evals |> 
+  map_chr(~ class(.))  
+
+tibble(variable = names(modified_evals), data_type = types) |>
+  pivot_wider(names_from = variable, values_from = data_type) |>
+  kable(caption = "Data Type for each Column in Modified Evals Data") |>
+  kable_styling(bootstrap_options = "striped")
 
 ```
 
